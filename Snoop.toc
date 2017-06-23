@@ -1,0 +1,4 @@
+## Interface: 30300
+## Title: Snoop
+## Notes: Prints traffic as it comes across the hidden addon chat channel.
+Snoop.xml
