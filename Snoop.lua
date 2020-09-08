@@ -1,7 +1,8 @@
 -- stuff that can be configured
-local window_name = "snoop" -- name of the window, not case sensitive
-local message_format = "%02d:%02d [%s %s] [%s]: %s"
-local message_format_out = "%02d:%02d [%s %s] To [%s]: %s"
+local window_name = "sp" -- name of the window for player whispers
+local window_name_auto = "sw" -- name of the window for automatic warden messages
+local message_format = "<<< %02d:%02d [%s %s] [%s]: %s"
+local message_format_out = ">>> %02d:%02d [%s %s] [%s]: %s"
 -- r, g and b of all messages
 local color_message_r = .9
 local color_message_g = .9
@@ -16,11 +17,26 @@ local function escape_char(c)
 end
 
 local function escape_str(s)
+    if not s then return "" end
+    s = tostring(s)
     -- escape pipes
     s = s:gsub("\124", "|cFF" .. color_escape .. "\124\124|r")
     -- escape control characters
     s = s:gsub("%c", escape_char)
     return s
+end
+
+-- given the name of a sender, is this an automated or a player message?
+local function get_window_name(s)
+    if not s or s == "" then
+        return window_name_auto
+    elseif s == "l0l" then
+        return window_name
+    elseif string.match(s, "^%u%l+$") == nil then
+        return window_name_auto
+    else
+        return window_name
+    end
 end
 
 local function get_window_index(wn)
@@ -37,39 +53,31 @@ end
 function Snoop_OnEvent(event, ...)
     local prefix, message, channel, sender = ...
 
-    if event ~= "CHAT_MSG_ADDON" then
-        return
-    end
-
     -- return if there's no window to print to
-    local window_index = get_window_index(window_name)
+    local window_index = get_window_index(get_window_name(sender))
     if not window_index then
         return
     end
 
-    if channel == "GUILD" then
-        -- boring spam
-        return
-    end
-
-    local hours, seconds = GetGameTime()
-    message = escape_str(message)
-
     -- print it
-    _G["ChatFrame" .. window_index]:AddMessage(
-        message_format:format(hours, seconds, channel, prefix, sender, message),
-            color_message_r, color_message_g, color_message_b)
+    if channel == "WHISPER" then
+        local hours, seconds = GetGameTime()
+        local escaped_message = escape_str(message)
+        _G["ChatFrame" .. window_index]:AddMessage(
+            message_format:format(hours, seconds, channel, prefix, sender, escaped_message),
+                color_message_r, color_message_g, color_message_b)
+    end
 end
 
 -- sent addon msgs
 hooksecurefunc("SendAddonMessage", function(prefix, message, type_, target)
-    if type_ ~= "WHISPER" then
-        -- we only handle whispers in this function.
-        return
-    end
-
     -- return if there's no window to print to
-    local window_index = get_window_index(window_name)
+    local window_index
+    if type_ == "WHISPER" then
+        window_index = get_window_index(get_window_name(target))
+    else
+        window_index = get_window_index(window_name)
+    end
     if not window_index then
         return
     end
@@ -82,7 +90,7 @@ hooksecurefunc("SendAddonMessage", function(prefix, message, type_, target)
 
     -- print it
     _G["ChatFrame" .. window_index]:AddMessage(
-        message_format_out:format(hours, seconds, "WHISPER", prefix, target, message),
+        message_format_out:format(hours, seconds, type_, prefix, target, message),
             color_message_r, color_message_g, color_message_b)
 end)
 
