@@ -5,6 +5,7 @@ guild, or in private.
 It works with the 3.3.5a version of the client, but it probably works in more
 recent or older versions as well.
 
-To use it, enable this addon and create a chat tab (right click the "General"
-tab, then "Create New Window") and call it "Snoop". Messages will be shown
-there, as long as this tab is kept open.
+To use it, enable this addon and create two chat tabs (right click the "General"
+tab, then "Create New Window") and call them "sp" and "sw". The "sp" window will
+show messages sent by other players while the "sw" window will show messages
+sent by Warden/Sentinel/etc.
